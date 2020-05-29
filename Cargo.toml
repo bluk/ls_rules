@@ -1,0 +1,22 @@
+[package]
+name = "ls_rules"
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+authors = ["Bryant Luk <bryant.luk@bryantluk.com>"]
+edition = "2018"
+description = "A Little Snitch .lsrules file format model"
+repository = "https://github.com/bluk/ls_rules"
+readme = "README.md"
+include = [
+  "src/**/*.rs",
+  "Cargo.toml",
+  "README.md",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1"
