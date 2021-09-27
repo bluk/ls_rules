@@ -58,6 +58,20 @@ pub struct LsRules {
     pub denied_remote_notes: Option<String>,
 }
 
+impl Default for LsRules {
+    fn default() -> Self {
+        LsRules {
+            name: None,
+            description: None,
+            rules: None,
+            denied_remote_domains: None,
+            denied_remote_hosts: None,
+            denied_remote_addresses: None,
+            denied_remote_notes: None,
+        }
+    }
+}
+
 /// A specific rule.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -423,6 +437,19 @@ impl<'de> Deserialize<'de> for Ports {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_default_rules() -> Result<(), serde_json::Error> {
+        let rules: LsRules = LsRules::default();
+        assert_eq!(rules.name, None);
+        assert_eq!(rules.description, None);
+        assert_eq!(rules.rules, None);
+        assert_eq!(rules.denied_remote_domains, None);
+        assert_eq!(rules.denied_remote_hosts, None);
+        assert_eq!(rules.denied_remote_addresses, None);
+        assert_eq!(rules.denied_remote_notes, None);
+        Ok(())
+    }
 
     #[test]
     fn test_empty_rules() -> Result<(), serde_json::Error> {
