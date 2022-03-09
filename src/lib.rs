@@ -27,7 +27,7 @@ use std::fmt;
 use std::str::FromStr;
 
 /// The container for all data.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct LsRules {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -56,20 +56,6 @@ pub struct LsRules {
         skip_serializing_if = "Option::is_none"
     )]
     pub denied_remote_notes: Option<String>,
-}
-
-impl Default for LsRules {
-    fn default() -> Self {
-        LsRules {
-            name: None,
-            description: None,
-            rules: None,
-            denied_remote_domains: None,
-            denied_remote_hosts: None,
-            denied_remote_addresses: None,
-            denied_remote_notes: None,
-        }
-    }
 }
 
 /// A specific rule.
@@ -410,7 +396,7 @@ impl<'de> Visitor<'de> for PortsVisitor {
                     return Ok(Ports::Single(v));
                 }
 
-                let ports: Vec<&str> = v.split("-").collect();
+                let ports: Vec<&str> = v.split('-').collect();
                 if ports.len() == 2 {
                     if let Ok(p1) = u16::from_str(ports[0]) {
                         if let Ok(p2) = u16::from_str(ports[1]) {
@@ -457,7 +443,7 @@ mod tests {
 {
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, None);
         assert_eq!(rules.description, None);
         Ok(())
@@ -471,7 +457,7 @@ mod tests {
     "description": "Blocks access to popular social media sites."
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, Some(String::from("Social Media Block List")));
         assert_eq!(
             rules.description,
@@ -489,7 +475,7 @@ mod tests {
     "denied-remote-domains": ["facebook.com", "twitter.com", "youtube.com"]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, Some(String::from("Social Media Block List")));
         assert_eq!(
             rules.description,
@@ -521,7 +507,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, Some(String::from("LaunchBar Software Update")));
         assert_eq!(
             rules.description,
@@ -560,7 +546,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, Some(String::from("LaunchBar Software Update")));
         assert_eq!(
             rules.description,
@@ -600,7 +586,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -626,7 +612,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -652,7 +638,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -682,7 +668,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -704,7 +690,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -726,7 +712,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -748,7 +734,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(&json)?;
+        let rules: LsRules = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
