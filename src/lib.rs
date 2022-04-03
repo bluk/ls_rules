@@ -1,4 +1,4 @@
-// Copyright 2019 Bryant Luk
+// Copyright 2022 Bryant Luk
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! # LsRules
+//! # Little Snitch Rules
 //!
 //! [Little Snitch][little_snitch] is like an application based firewall.  It allows
 //! a user to control what connections can be made to and from local applications.
@@ -14,7 +14,7 @@
 //! domain or hostname being connected to, the ports used, the application receiving
 //! or making the connection, etc.).
 //!
-//! [LsRules][lsrules] is a file format which specifies rules which Little Snitch
+//! [.lsrules][lsrules] is a file format which specifies rules which Little Snitch
 //! can use. This library is a [Serde][serde] model for serializing and
 //! deserializing `.lsrules` files.
 //!
@@ -389,25 +389,24 @@ impl<'de> Visitor<'de> for PortsVisitor {
     where
         E: serde::de::Error,
     {
-        match &v.to_lowercase()[..] {
-            "any" => Ok(Ports::Any),
-            _ => {
-                if let Ok(v) = u16::from_str(v) {
-                    return Ok(Ports::Single(v));
-                }
+        if matches!(&v.to_lowercase()[..], "any") {
+            return Ok(Ports::Any);
+        }
 
-                let ports: Vec<&str> = v.split('-').collect();
-                if ports.len() == 2 {
-                    if let Ok(p1) = u16::from_str(ports[0]) {
-                        if let Ok(p2) = u16::from_str(ports[1]) {
-                            return Ok(Ports::Range(p1, p2));
-                        }
-                    }
-                }
+        if let Ok(v) = u16::from_str(v) {
+            return Ok(Ports::Single(v));
+        }
 
-                Ok(Ports::Unknown(String::from(v)))
+        let ports: Vec<&str> = v.split('-').collect();
+        if ports.len() == 2 {
+            if let Ok(p1) = u16::from_str(ports[0]) {
+                if let Ok(p2) = u16::from_str(ports[1]) {
+                    return Ok(Ports::Range(p1, p2));
+                }
             }
         }
+
+        Ok(Ports::Unknown(String::from(v)))
     }
 }
 
@@ -425,7 +424,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_default_rules() -> Result<(), serde_json::Error> {
+    fn test_default_rules() {
         let rules: LsRules = LsRules::default();
         assert_eq!(rules.name, None);
         assert_eq!(rules.description, None);
@@ -434,7 +433,6 @@ mod tests {
         assert_eq!(rules.denied_remote_hosts, None);
         assert_eq!(rules.denied_remote_addresses, None);
         assert_eq!(rules.denied_remote_notes, None);
-        Ok(())
     }
 
     #[test]
