@@ -2,11 +2,14 @@
 name = "ls_rules"
 version = "0.2.0"
 license = "MIT OR Apache-2.0"
-authors = ["Bryant Luk <bryant.luk@bryantluk.com>"]
-edition = "2018"
+authors = ["Bryant Luk <code@bryantluk.com>"]
 description = "A Little Snitch .lsrules file format model"
+edition = "2021"
 repository = "https://github.com/bluk/ls_rules"
+documentation = "https://docs.rs/ls_rules/"
 readme = "README.md"
+keywords = ["lsrules", "json", "serialization", "serde"]
+categories = ["encoding", "no-std"]
 include = [
   "src/**/*.rs",
   "Cargo.toml",
@@ -16,7 +19,19 @@ include = [
 ]
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1.0", default-features = false }
+serde_derive = { version = "1" }
 
 [dev-dependencies]
 serde_json = "1"
+
+[features]
+default = ["std"]
+
+std = ["serde/std"]
+
+alloc = ["serde/alloc"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

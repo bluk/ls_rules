@@ -6,25 +6,37 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! # Little Snitch Rules
-//!
-//! [Little Snitch][little_snitch] is like an application based firewall.  It allows
-//! a user to control what connections can be made to and from local applications.
-//! You can choose to allow or deny connections based on a set of rules (such as the
-//! domain or hostname being connected to, the ports used, the application receiving
-//! or making the connection, etc.).
-//!
-//! [.lsrules][lsrules] is a file format which specifies rules which Little Snitch
-//! can use. This library is a [Serde][serde] model for serializing and
-//! deserializing `.lsrules` files.
-//!
-//! [little_snitch]: https://www.obdev.at/products/littlesnitch/index.html
-//! [lsrules]: https://help.obdev.at/littlesnitch/ref-lsrules-file-format
-//! [serde]: https://serde.rs
+#![doc = include_str!("../README.md")]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(
+    missing_copy_implementations,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
+
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+
+use core::{fmt, str::FromStr};
+
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+#[cfg(feature = "std")]
+use std::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
 
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
-use std::str::FromStr;
+use serde_derive::{Deserialize, Serialize};
 
 /// The container for all data.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -141,7 +153,7 @@ struct RemoteVisitor;
 impl<'de> Visitor<'de> for RemoteVisitor {
     type Value = Remote;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
@@ -203,7 +215,7 @@ struct DirectionVisitor;
 impl<'de> Visitor<'de> for DirectionVisitor {
     type Value = Direction;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
@@ -262,7 +274,7 @@ struct ActionVisitor;
 impl<'de> Visitor<'de> for ActionVisitor {
     type Value = Action;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
@@ -320,7 +332,7 @@ struct PriorityVisitor;
 impl<'de> Visitor<'de> for PriorityVisitor {
     type Value = Priority;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
@@ -381,7 +393,7 @@ struct PortsVisitor;
 impl<'de> Visitor<'de> for PortsVisitor {
     type Value = Ports;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string, integer, or range value")
     }
 
@@ -422,6 +434,9 @@ impl<'de> Deserialize<'de> for Ports {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::vec;
 
     #[test]
     fn test_default_rules() {
