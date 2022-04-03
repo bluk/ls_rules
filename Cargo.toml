@@ -5,6 +5,7 @@ license = "MIT OR Apache-2.0"
 authors = ["Bryant Luk <code@bryantluk.com>"]
 description = "A Little Snitch .lsrules file format model"
 edition = "2021"
+rust-version = "1.56"
 repository = "https://github.com/bluk/ls_rules"
 documentation = "https://docs.rs/ls_rules/"
 readme = "README.md"
@@ -19,7 +20,7 @@ include = [
 ]
 
 [dependencies]
-serde = { version = "1.0", default-features = false }
+serde = { version = "1", default-features = false }
 serde_derive = { version = "1" }
 
 [dev-dependencies]
