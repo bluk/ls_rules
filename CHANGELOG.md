@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2022-06-30
+
+### Updated
+
+- Changed use imports to fix compilation with only alloc feature
+
 ## [0.3.0] - 2022-04-03
 
 ### Updated
@@ -18,7 +24,8 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/bluk/ls_rules/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/bluk/ls_rules/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/bluk/ls_rules/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bluk/ls_rules/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bluk/ls_rules/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bluk/ls_rules/releases/tag/v0.1.0
