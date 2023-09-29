@@ -452,10 +452,10 @@ mod tests {
 
     #[test]
     fn test_empty_rules() -> Result<(), serde_json::Error> {
-        let json = r#"
+        let json = r"
 {
 }
-"#;
+";
         let rules: LsRules = serde_json::from_str(json)?;
         assert_eq!(rules.name, None);
         assert_eq!(rules.description, None);
