@@ -23,17 +23,9 @@ extern crate alloc;
 use core::{fmt, str::FromStr};
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-use alloc::{
-    format,
-    string::{String, ToString},
-    vec::Vec,
-};
+use alloc::{format, string::ToString, vec::Vec};
 #[cfg(feature = "std")]
-use std::{
-    format,
-    string::{String, ToString},
-    vec::Vec,
-};
+use std::{format, string::ToString, vec::Vec};
 
 use serde::{de::Visitor, Deserializer, Serializer};
 use serde_derive::{Deserialize, Serialize};
@@ -41,85 +33,85 @@ use serde_derive::{Deserialize, Serialize};
 /// The container for all data.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
-pub struct LsRules {
+pub struct LsRules<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    pub description: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub rules: Option<Vec<Rule>>,
+    pub rules: Option<Vec<Rule<'a>>>,
     #[serde(
         rename = "denied-remote-domains",
         skip_serializing_if = "Option::is_none"
     )]
-    pub denied_remote_domains: Option<Vec<String>>,
+    pub denied_remote_domains: Option<Vec<&'a str>>,
     #[serde(
         rename = "denied-remote-hosts",
         skip_serializing_if = "Option::is_none"
     )]
-    pub denied_remote_hosts: Option<Vec<String>>,
+    pub denied_remote_hosts: Option<Vec<&'a str>>,
     #[serde(
         rename = "denied-remote-addresses",
         skip_serializing_if = "Option::is_none"
     )]
-    pub denied_remote_addresses: Option<Vec<String>>,
+    pub denied_remote_addresses: Option<Vec<&'a str>>,
     #[serde(
         rename = "denied-remote-notes",
         skip_serializing_if = "Option::is_none"
     )]
-    pub denied_remote_notes: Option<String>,
+    pub denied_remote_notes: Option<&'a str>,
 }
 
 /// A specific rule.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
-pub struct Rule {
-    pub process: String,
+pub struct Rule<'a> {
+    pub process: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub via: Option<String>,
+    pub via: Option<&'a str>,
     #[serde(rename = "remote-addresses", skip_serializing_if = "Option::is_none")]
-    pub remote_addresses: Option<String>,
+    pub remote_addresses: Option<&'a str>,
     #[serde(rename = "remote-hosts", skip_serializing_if = "Option::is_none")]
-    pub remote_hosts: Option<RemoteHosts>,
+    pub remote_hosts: Option<RemoteHosts<'a>>,
     #[serde(rename = "remote-domains", skip_serializing_if = "Option::is_none")]
-    pub remote_domains: Option<RemoteDomains>,
+    pub remote_domains: Option<RemoteDomains<'a>>,
+    #[serde(skip_serializing_if = "Option::is_none", borrow)]
+    pub remote: Option<Remote<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub remote: Option<Remote>,
+    pub direction: Option<Direction<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub direction: Option<Direction>,
+    pub action: Option<Action<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub action: Option<Action>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub priority: Option<Priority>,
+    pub priority: Option<Priority<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ports: Option<Ports>,
+    pub ports: Option<Ports<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub protocol: Option<String>,
+    pub protocol: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub notes: Option<String>,
+    pub notes: Option<&'a str>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 #[non_exhaustive]
-pub enum RemoteHosts {
-    Single(String),
-    Multiple(Vec<String>),
+pub enum RemoteHosts<'a> {
+    Single(&'a str),
+    Multiple(Vec<&'a str>),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 #[non_exhaustive]
-pub enum RemoteDomains {
-    Single(String),
-    Multiple(Vec<String>),
+pub enum RemoteDomains<'a> {
+    Single(&'a str),
+    Multiple(Vec<&'a str>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Remote {
+pub enum Remote<'a> {
     Any,
     LocalNet,
     Multicast,
@@ -127,10 +119,10 @@ pub enum Remote {
     Bonjour,
     DnsServers,
     Bpf,
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl serde::Serialize for Remote {
+impl<'a> serde::Serialize for Remote<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -151,13 +143,13 @@ impl serde::Serialize for Remote {
 struct RemoteVisitor;
 
 impl<'de> Visitor<'de> for RemoteVisitor {
-    type Value = Remote;
+    type Value = Remote<'de>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
@@ -169,12 +161,15 @@ impl<'de> Visitor<'de> for RemoteVisitor {
             "bonjour" => Ok(Remote::Bonjour),
             "dns-servers" => Ok(Remote::DnsServers),
             "bpf" => Ok(Remote::Bpf),
-            _ => Ok(Remote::Unknown(String::from(v))),
+            _ => Ok(Remote::Unknown(v)),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Remote {
+impl<'de, 'a> serde::Deserialize<'de> for Remote<'a>
+where
+    'de: 'a,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -185,19 +180,19 @@ impl<'de> serde::Deserialize<'de> for Remote {
 
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Direction {
+pub enum Direction<'a> {
     Incoming,
     Outgoing,
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl Default for Direction {
+impl<'a> Default for Direction<'a> {
     fn default() -> Self {
         Direction::Outgoing
     }
 }
 
-impl serde::Serialize for Direction {
+impl<'a> serde::Serialize for Direction<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -213,25 +208,28 @@ impl serde::Serialize for Direction {
 struct DirectionVisitor;
 
 impl<'de> Visitor<'de> for DirectionVisitor {
-    type Value = Direction;
+    type Value = Direction<'de>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
         match &v.to_lowercase()[..] {
             "incoming" => Ok(Direction::Incoming),
             "outgoing" => Ok(Direction::Outgoing),
-            _ => Ok(Direction::Unknown(String::from(v))),
+            _ => Ok(Direction::Unknown(v)),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Direction {
+impl<'de, 'a> serde::Deserialize<'de> for Direction<'a>
+where
+    'de: 'a,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -242,20 +240,20 @@ impl<'de> serde::Deserialize<'de> for Direction {
 
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Action {
+pub enum Action<'a> {
     Allow,
     Deny,
     Ask,
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl Default for Action {
+impl<'a> Default for Action<'a> {
     fn default() -> Self {
         Action::Ask
     }
 }
 
-impl serde::Serialize for Action {
+impl<'a> serde::Serialize for Action<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -272,13 +270,13 @@ impl serde::Serialize for Action {
 struct ActionVisitor;
 
 impl<'de> Visitor<'de> for ActionVisitor {
-    type Value = Action;
+    type Value = Action<'de>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
@@ -286,12 +284,15 @@ impl<'de> Visitor<'de> for ActionVisitor {
             "allow" => Ok(Action::Allow),
             "deny" => Ok(Action::Deny),
             "ask" => Ok(Action::Ask),
-            _ => Ok(Action::Unknown(String::from(v))),
+            _ => Ok(Action::Unknown(v)),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Action {
+impl<'de, 'a> serde::Deserialize<'de> for Action<'a>
+where
+    'de: 'a,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -302,19 +303,19 @@ impl<'de> serde::Deserialize<'de> for Action {
 
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Priority {
+pub enum Priority<'a> {
     Default,
     High,
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl Default for Priority {
+impl<'a> Default for Priority<'a> {
     fn default() -> Self {
         Priority::Default
     }
 }
 
-impl serde::Serialize for Priority {
+impl<'a> serde::Serialize for Priority<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -330,25 +331,28 @@ impl serde::Serialize for Priority {
 struct PriorityVisitor;
 
 impl<'de> Visitor<'de> for PriorityVisitor {
-    type Value = Priority;
+    type Value = Priority<'de>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string value")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
         match &v.to_lowercase()[..] {
             "default" => Ok(Priority::Default),
             "high" => Ok(Priority::High),
-            _ => Ok(Priority::Unknown(String::from(v))),
+            _ => Ok(Priority::Unknown(v)),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Priority {
+impl<'de, 'a> serde::Deserialize<'de> for Priority<'a>
+where
+    'de: 'a,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -359,20 +363,20 @@ impl<'de> serde::Deserialize<'de> for Priority {
 
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Ports {
+pub enum Ports<'a> {
     Any,
     Single(u16),
     Range(u16, u16),
-    Unknown(String),
+    Unknown(&'a str),
 }
 
-impl Default for Ports {
+impl<'a> Default for Ports<'a> {
     fn default() -> Self {
         Ports::Any
     }
 }
 
-impl serde::Serialize for Ports {
+impl<'a> serde::Serialize for Ports<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -391,13 +395,13 @@ impl serde::Serialize for Ports {
 struct PortsVisitor;
 
 impl<'de> Visitor<'de> for PortsVisitor {
-    type Value = Ports;
+    type Value = Ports<'de>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string, integer, or range value")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
@@ -418,11 +422,14 @@ impl<'de> Visitor<'de> for PortsVisitor {
             }
         }
 
-        Ok(Ports::Unknown(String::from(v)))
+        Ok(Ports::Unknown(v))
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Ports {
+impl<'de, 'a> serde::Deserialize<'de> for Ports<'a>
+where
+    'de: 'a,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -440,7 +447,7 @@ mod tests {
 
     #[test]
     fn test_default_rules() {
-        let rules: LsRules = LsRules::default();
+        let rules: LsRules<'_> = LsRules::default();
         assert_eq!(rules.name, None);
         assert_eq!(rules.description, None);
         assert_eq!(rules.rules, None);
@@ -456,7 +463,7 @@ mod tests {
 {
 }
 ";
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         assert_eq!(rules.name, None);
         assert_eq!(rules.description, None);
         Ok(())
@@ -470,11 +477,11 @@ mod tests {
     "description": "Blocks access to popular social media sites."
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
-        assert_eq!(rules.name, Some(String::from("Social Media Block List")));
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
+        assert_eq!(rules.name, Some("Social Media Block List"));
         assert_eq!(
             rules.description,
-            Some(String::from("Blocks access to popular social media sites."))
+            Some("Blocks access to popular social media sites.")
         );
         Ok(())
     }
@@ -488,19 +495,15 @@ mod tests {
     "denied-remote-domains": ["facebook.com", "twitter.com", "youtube.com"]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
-        assert_eq!(rules.name, Some(String::from("Social Media Block List")));
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
+        assert_eq!(rules.name, Some("Social Media Block List"));
         assert_eq!(
             rules.description,
-            Some(String::from("Blocks access to popular social media sites."))
+            Some("Blocks access to popular social media sites.")
         );
         assert_eq!(
             rules.denied_remote_domains,
-            Some(vec![
-                String::from("facebook.com"),
-                String::from("twitter.com"),
-                String::from("youtube.com")
-            ])
+            Some(vec!["facebook.com", "twitter.com", "youtube.com"])
         );
         Ok(())
     }
@@ -520,13 +523,11 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
-        assert_eq!(rules.name, Some(String::from("LaunchBar Software Update")));
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
+        assert_eq!(rules.name, Some("LaunchBar Software Update"));
         assert_eq!(
             rules.description,
-            Some(String::from(
-                "This rule allows LaunchBar to check for updates."
-            ))
+            Some("This rule allows LaunchBar to check for updates.")
         );
 
         let rules = rules.rules.expect("expecting rules");
@@ -535,11 +536,11 @@ mod tests {
         assert_eq!(rule.action, Some(Action::Allow));
         assert_eq!(
             rule.process,
-            String::from("/Applications/LaunchBar.app/Contents/MacOS/LaunchBar")
+            "/Applications/LaunchBar.app/Contents/MacOS/LaunchBar"
         );
         assert_eq!(
             rule.remote_hosts,
-            Some(RemoteHosts::Single(String::from("sw-update.obdev.at")))
+            Some(RemoteHosts::Single("sw-update.obdev.at"))
         );
         Ok(())
     }
@@ -559,13 +560,11 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
-        assert_eq!(rules.name, Some(String::from("LaunchBar Software Update")));
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
+        assert_eq!(rules.name, Some("LaunchBar Software Update"));
         assert_eq!(
             rules.description,
-            Some(String::from(
-                "This rule allows LaunchBar to check for updates."
-            ))
+            Some("This rule allows LaunchBar to check for updates.")
         );
 
         let rules = rules.rules.expect("expecting rules");
@@ -574,13 +573,13 @@ mod tests {
         assert_eq!(rule.action, Some(Action::Allow));
         assert_eq!(
             rule.process,
-            String::from("/Applications/LaunchBar.app/Contents/MacOS/LaunchBar")
+            "/Applications/LaunchBar.app/Contents/MacOS/LaunchBar"
         );
         assert_eq!(
             rule.remote_hosts,
             Some(RemoteHosts::Multiple(vec![
-                String::from("sw-update.obdev.at"),
-                String::from("example.com")
+                "sw-update.obdev.at",
+                "example.com"
             ]))
         );
         Ok(())
@@ -599,14 +598,14 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
         assert_eq!(rule.action, Some(Action::Allow));
         assert_eq!(
             rule.process,
-            String::from("/Applications/LaunchBar.app/Contents/MacOS/LaunchBar")
+            "/Applications/LaunchBar.app/Contents/MacOS/LaunchBar"
         );
         assert_eq!(rule.remote, Some(Remote::Any));
         Ok(())
@@ -625,14 +624,14 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
         assert_eq!(rule.action, Some(Action::Allow));
         assert_eq!(
             rule.process,
-            String::from("/Applications/LaunchBar.app/Contents/MacOS/LaunchBar")
+            "/Applications/LaunchBar.app/Contents/MacOS/LaunchBar"
         );
         assert_eq!(rule.remote, Some(Remote::LocalNet));
         Ok(())
@@ -651,19 +650,16 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
         assert_eq!(rule.action, Some(Action::Allow));
         assert_eq!(
             rule.process,
-            String::from("/Applications/LaunchBar.app/Contents/MacOS/LaunchBar")
+            "/Applications/LaunchBar.app/Contents/MacOS/LaunchBar"
         );
-        assert_eq!(
-            rule.remote,
-            Some(Remote::Unknown(String::from("my-custom")))
-        );
+        assert_eq!(rule.remote, Some(Remote::Unknown("my-custom")));
         Ok(())
     }
 
@@ -681,7 +677,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -703,7 +699,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -725,7 +721,7 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
@@ -747,11 +743,11 @@ mod tests {
   ]
 }
 "#;
-        let rules: LsRules = serde_json::from_str(json)?;
+        let rules: LsRules<'_> = serde_json::from_str(json)?;
         let rules = rules.rules.expect("expecting rules");
         assert_eq!(rules.len(), 1);
         let rule = rules.first().expect("first rule to exist");
-        assert_eq!(rule.ports, Some(Ports::Unknown(String::from("my-custom"))));
+        assert_eq!(rule.ports, Some(Ports::Unknown("my-custom")));
         Ok(())
     }
 }
