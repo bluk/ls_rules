@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0] - 2023-10-02
+
+### Updated
+
+* Change types to use borrowed `str` instead of `String` to reduce memory usage.
+
 ## [0.3.1] - 2022-06-30
 
 ### Updated
@@ -24,7 +30,8 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/bluk/ls_rules/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/bluk/ls_rules/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/bluk/ls_rules/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/bluk/ls_rules/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bluk/ls_rules/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bluk/ls_rules/compare/v0.1.0...v0.2.0
