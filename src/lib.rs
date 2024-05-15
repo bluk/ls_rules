@@ -27,8 +27,7 @@ use alloc::{format, string::ToString, vec::Vec};
 #[cfg(feature = "std")]
 use std::{format, string::ToString, vec::Vec};
 
-use serde::{de::Visitor, Deserializer, Serializer};
-use serde_derive::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
 /// The container for all data.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -122,7 +121,7 @@ pub enum Remote<'a> {
     Unknown(&'a str),
 }
 
-impl<'a> serde::Serialize for Remote<'a> {
+impl<'a> Serialize for Remote<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -166,7 +165,7 @@ impl<'de> Visitor<'de> for RemoteVisitor {
     }
 }
 
-impl<'de, 'a> serde::Deserialize<'de> for Remote<'a>
+impl<'de, 'a> Deserialize<'de> for Remote<'a>
 where
     'de: 'a,
 {
@@ -192,7 +191,7 @@ impl<'a> Default for Direction<'a> {
     }
 }
 
-impl<'a> serde::Serialize for Direction<'a> {
+impl<'a> Serialize for Direction<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -226,7 +225,7 @@ impl<'de> Visitor<'de> for DirectionVisitor {
     }
 }
 
-impl<'de, 'a> serde::Deserialize<'de> for Direction<'a>
+impl<'de, 'a> Deserialize<'de> for Direction<'a>
 where
     'de: 'a,
 {
@@ -253,7 +252,7 @@ impl<'a> Default for Action<'a> {
     }
 }
 
-impl<'a> serde::Serialize for Action<'a> {
+impl<'a> Serialize for Action<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -289,7 +288,7 @@ impl<'de> Visitor<'de> for ActionVisitor {
     }
 }
 
-impl<'de, 'a> serde::Deserialize<'de> for Action<'a>
+impl<'de, 'a> Deserialize<'de> for Action<'a>
 where
     'de: 'a,
 {
@@ -315,7 +314,7 @@ impl<'a> Default for Priority<'a> {
     }
 }
 
-impl<'a> serde::Serialize for Priority<'a> {
+impl<'a> Serialize for Priority<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -349,7 +348,7 @@ impl<'de> Visitor<'de> for PriorityVisitor {
     }
 }
 
-impl<'de, 'a> serde::Deserialize<'de> for Priority<'a>
+impl<'de, 'a> Deserialize<'de> for Priority<'a>
 where
     'de: 'a,
 {
@@ -376,7 +375,7 @@ impl<'a> Default for Ports<'a> {
     }
 }
 
-impl<'a> serde::Serialize for Ports<'a> {
+impl<'a> Serialize for Ports<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -426,7 +425,7 @@ impl<'de> Visitor<'de> for PortsVisitor {
     }
 }
 
-impl<'de, 'a> serde::Deserialize<'de> for Ports<'a>
+impl<'de, 'a> Deserialize<'de> for Ports<'a>
 where
     'de: 'a,
 {
