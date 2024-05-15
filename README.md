@@ -14,7 +14,7 @@ deserializing `.lsrules` files.
 
 ```toml
 [dependencies]
-ls_rules = "0.4.0"
+ls_rules = "0.4.1"
 ```
 
 ## License
